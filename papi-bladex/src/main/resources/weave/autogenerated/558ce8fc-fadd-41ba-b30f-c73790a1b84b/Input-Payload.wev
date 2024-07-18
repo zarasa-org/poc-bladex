@@ -1,0 +1,14 @@
+%dw 2.0
+
+type auto_558ce8fc_fadd_41ba_b30f_c73790a1b84b_Input_Payload = {
+  Outbound: {
+    FinancialGatewayOutboundMessageStatus?: String, 
+    _?: Any
+  }, 
+  FinancialGatewayOperatingSession: {
+    FinancialGatewayServiceSessionStatistics?: String, 
+    _?: Any
+  }, 
+  _?: Any
+}
+

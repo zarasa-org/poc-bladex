@@ -1,0 +1,37 @@
+#%RAML 1.0
+title: SAPI Amazon Aurora
+
+securitySchemes:
+  bladexSecurity: !include security-scheme/bladexSecurityScheme.raml
+
+securedBy:
+  - bladexSecurity
+
+types:
+  bodyInsert: !include types/insertBody.raml
+  pingResponse: !include types/pingResponse.raml
+  readyResponse: !include types/readyResponse.raml
+  
+uses:
+  sapi-amazon-aurora-resource-type: libraries/sapi-amazon-aurora-resource-type.raml
+
+traits:
+  error-responses-trait: !include error-responses-trait/error-responses-trait.raml
+
+/Insert:
+  type: {sapi-amazon-aurora-resource-type.insertCollection: {exampleReference: !include examples/insertBody.json, typeReference: bodyInsert }}
+  description: Inserta un trama en la bd
+  post:
+
+/BulkInsert:
+  type: {sapi-amazon-aurora-resource-type.bulkInsertCollection}
+  description: Inserta un conjunto de tramas en la bd
+  post:
+
+/Ping:
+  type: {sapi-amazon-aurora-resource-type.pingCollection: {exampleReference: !include examples/pingResponse.json, typeReference: pingResponse }}
+  get:
+
+/Ready:
+  type: {sapi-amazon-aurora-resource-type.readyCollection: {exampleReference: !include examples/readyResponse.json, typeReference: readyResponse }}
+  get:

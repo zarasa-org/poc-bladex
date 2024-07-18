@@ -1,0 +1,41 @@
+#%RAML 1.0
+title: XAPI Bladex
+documentation:
+- title: XAPI Bladex, layer for users
+  content: 'XAPI Bladex'
+#  describedBy: https://docs.google.com/document/d/1xsfLytVW8WuyS8H7OaJVR8uD8kD-fFHf/edit?usp=sharing&ouid=109677197812368688892&rtpof=true&sd=true
+#https://app.swaggerhub.com/apis/milenaperalbo/financial-gateway/12.0.0#/CR%20-%20FinancialGatewayOperatingSession/Initiate
+
+securitySchemes:
+  bladexSecurity: !include security-scheme/bladexSecurityScheme.raml
+
+securedBy:
+  - bladexSecurity
+
+types:
+  pingResponse: !include types/pingResponse.raml
+  readyResponse: !include types/readyResponse.raml
+  initiateBody: !include types/initiateBody.raml
+  initiateResponse: !include types/initiateResponse.raml
+  retrieveResponse: !include types/retrieveResponse.raml
+
+uses:
+  xapi-bladex-resource-type: libraries/xapi-bladex-resource-type.raml
+
+/FinancialGateway/{financialgatewayid}/Outbound:
+  /Initiate:
+    description: Envia transferencia Internacional por Swift
+    type: {xapi-bladex-resource-type.initiateCollection: {bodyExampleReference: !include examples/initiateBody.json, bodyTypeReference: initiateBody, responseExampleReference: !include examples/initiateResponse.json, responseTypeReference: initiateResponse }}
+    post:
+
+  /{outboundid}/Retrieve:
+    type: {xapi-bladex-resource-type.retrieveCollection: {exampleReference: !include examples/retrieveResponse.json, typeReference: retrieveResponse }}
+    get:
+
+/Ping:
+  type: {xapi-bladex-resource-type.pingCollection: {exampleReference: !include examples/pingResponse.json, typeReference: pingResponse }}
+  get:
+
+/Ready:
+  type: {xapi-bladex-resource-type.readyCollection: {exampleReference: !include examples/readyResponse.json, typeReference: readyResponse }}
+  get:

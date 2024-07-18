@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<flow name="schedule-jobsFlow" doc:id="2d52ac11-dcaf-4afa-b318-f16b27d268a0" initialState="${scheduler.initialStatus}">
+		<scheduler doc:name="Scheduler" doc:id="a17c766c-778e-4cee-a84b-48377d55ce59" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="120" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="Retrieve Tramas" doc:id="8972507d-ddf9-491b-851b-7ccc80589a7d" key="tramas" objectStore="Object_store">
+			<os:default-value ><![CDATA[#[{}]]]></os:default-value>
+		</os:retrieve>
+		<choice doc:name="Choice" doc:id="ef2d5612-5718-4115-8003-f1c8b4386a4e" >
+			<when expression="#[!isEmpty(payload)]">
+				<foreach doc:name="For Each" doc:id="0813ad70-307c-40bc-a0a6-6b9901844080" collection="#[dw::core::Objects::entrySet(payload)]">
+			<ee:transform doc:name="Financial gateway id and outbound id" doc:id="d77ef4e1-d5e9-49c9-86e0-fb272e54b579">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="financialgatewayid"><![CDATA[%dw 2.0
+output application/java
+---
+payload.value]]></ee:set-variable>
+					<ee:set-variable variableName="outboundid"><![CDATA[%dw 2.0
+output application/java
+---
+payload.key]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<http:request method="GET" doc:name="Recibir transferencia internacional por Swift" doc:id="adc3a476-beb8-476a-9663-de096f6b19d3" config-ref="PAPI_HTTP_Request_configuration" path='#["/FinancialGateway/" ++ vars.financialgatewayid ++ "/Outbound/" ++ vars.outboundid ++ "/Retrieve"]' >
+						<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+payload]]]></http:body>
+						<http:headers ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	'client_id': p('papi.bladex.client_id'),
+	'client_secret': p('papi.bladex.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+					</http:request>
+		</foreach>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="No hay transferencias por procesar!" doc:id="b0c0d2e8-6850-418a-9320-1ca1ff5e2e10" message="No hay transferencias por procesar!"/>
+			</otherwise>
+		</choice>
+		<os:remove doc:name="Remove Tramas from OS" doc:id="283b6bf9-9daa-4f64-aac4-a51c388bf2e0" objectStore="Object_store" key="tramas"/>
+	</flow>
+</mule>

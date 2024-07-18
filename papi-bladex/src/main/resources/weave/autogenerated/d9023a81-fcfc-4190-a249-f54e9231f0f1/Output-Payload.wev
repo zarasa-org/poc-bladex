@@ -1,0 +1,19 @@
+%dw 2.0
+
+type auto_d9023a81_fcfc_4190_a249_f54e9231f0f1_Output_Payload = {
+  Outbound: {
+    FinancialGatewayOutboundMessageType?: String, 
+    FinancialGatewayOutboundMessageSender?: String, 
+    FinancialGatewayOutboundMessageReceiver?: String, 
+    FinancialGatewayOutboundMessageRecord?: String, 
+    FinancialGatewayOutboundMessageStatus?: String, 
+    _?: Any
+  }, 
+  FinancialGatewayOperatingSession: {
+    FinancialGatewayServiceType?: String, 
+    FinancialGatewayServiceSessionStatistics?: String, 
+    _?: Any
+  }, 
+  _?: Any
+}
+

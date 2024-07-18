@@ -1,0 +1,13 @@
+{
+  "FinancialGatewayOperatingSession": {
+    "FinancialGatewayServiceType": "string",
+    "FinancialGatewayServiceSessionStatistics": "string"
+  },
+  "Outbound": {
+    "FinancialGatewayOutboundMessageType": "string",
+    "FinancialGatewayOutboundMessageRecord": "string",
+    "FinancialGatewayOutboundMessageSender": "string",
+    "FinancialGatewayOutboundMessageReceiver": "string",
+    "FinancialGatewayOutboundMessageStatus": "string"
+  }
+}

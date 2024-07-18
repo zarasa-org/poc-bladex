@@ -1,0 +1,66 @@
+#%RAML 1.0
+title: SAPI Amazon S3
+
+types:
+  pingResponse: !include types/pingResponse.raml
+  readyResponse: !include types/readyResponse.raml
+  
+traits:
+  error-responses-trait: !include error-responses-trait/error-responses-trait.raml
+
+securitySchemes:
+  bladexSecurity: !include security-scheme/bladexSecurityScheme.raml
+
+securedBy:
+  - bladexSecurity
+
+uses:
+  sapi-amazon-s3-resource-type: libraries/sapi-amazon-s3-resource-type.raml
+
+/PutObject:
+  description: put Object from Amazon S3
+  post:
+    body:
+      application/json:
+        #type: initiateBody
+        example: !include examples/putObject.json
+    responses:
+      200:
+        description: 200 OK - The request succeeded.
+        headers:
+          Content-Type:
+            description: Content type returned by api is JSON.
+            example: application/json; charset=UTF-8
+        body:
+          application/json:
+            #type: initiateResponse
+            #example: !include examples/initiateResponse.json
+    is: [ error-responses-trait ]
+
+/GetObject:
+  description: get Object from Amazon S3
+  post:
+    body:
+      application/json:
+        #type: initiateBody
+        example: !include examples/getObject.json
+    responses:
+      200:
+        description: 200 OK - The request succeeded.
+        headers:
+          Content-Type:
+            description: Content type returned by api is JSON.
+            example: application/json; charset=UTF-8
+        body:
+          application/json:
+            #type: initiateResponse
+            #example: !include examples/initiateResponse.json
+    is: [ error-responses-trait ]
+
+/Ping:
+  type: {sapi-amazon-s3-resource-type.pingCollection: {exampleReference: !include examples/pingResponse.json, typeReference: pingResponse }}
+  get:
+
+/Ready:
+  type: {sapi-amazon-s3-resource-type.readyCollection: {exampleReference: !include examples/readyResponse.json, typeReference: readyResponse }}
+  get:

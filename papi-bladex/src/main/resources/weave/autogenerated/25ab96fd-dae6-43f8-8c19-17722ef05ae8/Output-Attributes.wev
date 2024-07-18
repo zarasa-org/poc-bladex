@@ -1,0 +1,23 @@
+%dw 2.0
+
+type auto_25ab96fd_dae6_43f8_8c19_17722ef05ae8_Output_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {|  |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {| financialgatewayid: String |}, 
+  version: String, 
+  localAddress: String
+|}
+

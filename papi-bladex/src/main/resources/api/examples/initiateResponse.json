@@ -1,0 +1,8 @@
+{
+  "FinancialGatewayOperatingSession": {
+    "FinancialGatewayServiceSessionStatistics": "string"
+  },
+  "Outbound": {
+    "FinancialGatewayOutboundMessageStatus": "string"
+  }
+}

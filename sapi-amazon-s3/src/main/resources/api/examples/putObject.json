@@ -1,0 +1,6 @@
+{
+  "bucketName": "bladex-test",
+  "objectKey": "swift_15072024",
+  "content": "FinancialGatewayServiceType;FinancialGatewayServiceSessionStatistics;FinancialGatewayOutboundMessageType;FinancialGatewayOutboundMessageRecord;FinancialGatewayOutboundMessageSender;FinancialGatewayOutboundMessageReceiver;FinancialGatewayOutboundMessageStatus\nServiceType;ServiceSessionStatistics;OutboundMessageType;OutboundMessageRecord;OutboundMessageSender;OutboundMessageReceiver;OutboundMessageStatus",
+  "contentType": "text/plain"
+}

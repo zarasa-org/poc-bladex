@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="e2db8e8b-f31c-4790-a51f-b5198cbb166f" >
+		<s3:connection accessKey="${secure::amazon.s3.accessKey}" secretKey="${secure::amazon.s3.secretKey}" region="us-east-2" />
+	</s3:config>
+	<http:listener-config name="sapi-amazon-s3-httpListenerConfig">
+        <http:listener-connection host="${https.host}" port="${https.port}" protocol="HTTPS">
+        	<tls:context >
+				<tls:key-store type="jks" path="bladex-keystore.jks" keyPassword="bladex123" password="bladex123" />
+			</tls:context>
+		</http:listener-connection>
+    </http:listener-config>
+    <apikit:config name="sapi-amazon-s3-config" api="sapi-amazon-s3.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<global-property doc:name="Global Property" doc:id="2d53ddca-d81a-4771-9b0b-08b1615f6e9c" name="env" value="dev" />
+	<configuration-properties doc:name="Configuration properties" doc:id="9fd5d4b9-949f-4812-92b5-5e2625caa08e" file="${env}-properties.yaml" />
+	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="ec69c5c3-22a6-4d16-92b0-3488e182e01d" flowRef="sapi-amazon-s3-main" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="a058cde9-73b4-4e83-8bea-0b49873a1924" file="${env}-secure-properties.yaml" key="${secure.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+
+</mule>

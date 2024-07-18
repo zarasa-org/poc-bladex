@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+    <flow name="sapi-amazon-s3-main">
+        <http:listener config-ref="sapi-amazon-s3-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[error.description]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="sapi-amazon-s3-config" />
+        <error-handler ref="default-error-handler" />
+    </flow>
+    <flow name="sapi-amazon-s3-console">
+        <http:listener config-ref="sapi-amazon-s3-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="sapi-amazon-s3-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\Ping:sapi-amazon-s3-config">
+		<flow-ref doc:name="Ping Process" doc:id="b5ce7700-2b83-41bd-b442-e05071c20a8d" name="Ping-process" />
+    </flow>
+    <flow name="get:\Ready:sapi-amazon-s3-config">
+		<flow-ref doc:name="Ready Process" doc:id="9ca9ba4d-c91d-44f4-8e32-db3f6b51d267" name="Ready-process" />
+    </flow>
+    <flow name="post:\GetObject:application\json:sapi-amazon-s3-config">
+		<ee:transform doc:name="Body to java" doc:id="3b8127aa-f044-4697-8368-6b9cb03d8778">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<s3:get-object doc:name="Get Object" doc:id="8888d38c-0783-471c-b6fb-02626a8ab48d" config-ref="Amazon_S3_Configuration" bucketName="#[payload.bucketName]" key="#[payload.objectKey]" outputMimeType="#[payload.contentType]">
+            <ee:repeatable-file-store-stream bufferUnit="MB" />
+        </s3:get-object>
+		<ee:transform doc:name="Request Response" doc:id="20a9a874-f1f0-4536-bfff-b6fb93706d29">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<error-handler ref="error-handler-get-object" />
+    </flow>
+    <flow name="post:\PutObject:application\json:sapi-amazon-s3-config">
+		<ee:transform doc:name="Body to java" doc:id="70a5da6b-bf7e-494a-a49e-0cfffa60e073">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<s3:put-object doc:name="Put Object" doc:id="59d3569c-9529-4c11-bd15-762f6494777f" config-ref="Amazon_S3_Configuration" bucketName="#[payload.bucketName]" key="#[payload.objectKey]" contentLength="#[sizeOf(payload.content)]" contentType="#[payload.contentType]">
+            <s3:content><![CDATA[#[payload.content]]]></s3:content>
+        </s3:put-object>
+		<ee:transform doc:name="Request Response" doc:id="c1890aa5-b9ec-4041-8420-4ecc8abf2ad1">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>

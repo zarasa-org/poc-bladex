@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="8f35303d-5e16-4d8a-9d13-bad6f1b8b35b" basePath="/api" >
+		<http:request-connection protocol="HTTPS" host="sapi-amazon-s3.us-e2.cloudhub.io" />
+	</http:request-config>
+	<flow name="Initiate-process" doc:id="558ce8fc-fadd-41ba-b30f-c73790a1b84b" >
+		<flow-ref doc:name="Generate transactions file per day" doc:id="3dcb6470-5a13-4330-8e7f-b640679fc0c6" name="Generate-transactions-file-per-day" />
+		<http:request method="POST" doc:name="SAPI Amazon MQ Consume" doc:id="c058c40f-dc33-4e35-8c32-38c784ff829b" url="#[&quot;https://ssapi-amazon-mq.us-e2.cloudhub.io/api/PublishMessage/&quot; ++ p('amazon.queueName')]" target="MQMessage">
+			<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+payload]]]></http:body>
+			<http:headers><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	'client_id': p('sapi.amazon.mq.client_id'),
+	'client_secret': p('sapi.amazon.mq.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+		</http:request>
+		<flow-ref doc:name="Put Object to S3" doc:id="02229567-c733-4a51-af51-2c4cdfe5b250" name="put-object-to-s3" />
+		<flow-ref doc:name="Adjust Object Store" doc:id="5568c524-f0d0-4baf-8ad2-ec5e7fd30523" name="Adjust-object-store"/>
+		<flow-ref doc:name="Additional implementation" doc:id="7f361b8c-72cf-472c-8661-4e4451ac2473" name="Additional-implementation-initiate"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fd66280b-ed70-4541-9072-9d6a01954030" >
+				<ee:transform doc:name="Error Response" doc:id="3d88e303-538b-4ee6-9b21-b7dfbd7402aa" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "500",
+  "status": "Failed",
+  "message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="Adjust-object-store" doc:id="25ab96fd-dae6-43f8-8c19-17722ef05ae8" >
+		<os:retrieve doc:name="Retrieve Tramas" doc:id="ac781ebb-0581-4ddc-a5d2-1c184e7e287c" key="tramas" objectStore="Object_store" target="OSResponse">
+			<os:default-value ><![CDATA[#[{}]]]></os:default-value>
+		</os:retrieve>
+		<ee:transform doc:name="Add New Message" doc:id="f1d803b2-6514-46dc-989e-a1cdbd29b8b6" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="OSTramas" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.OSResponse ++
+{
+	(correlationId): vars.financialgatewayid
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<os:store doc:name="Store Trama" doc:id="30abbea3-6def-401d-b0a5-2f8f7afe0adf" key="tramas" objectStore="Object_store">
+			<os:value ><![CDATA[#[vars.OSTramas]]]></os:value>
+		</os:store>
+	</flow>
+	<flow name="Generate-transactions-file-per-day" doc:id="df814467-86d8-4581-b7bb-87cc4de9acd6">
+		<ee:transform doc:name="S3 Filename" doc:id="b9b9a1b6-ce33-4009-aebd-5293dd1283b0">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="S3FileName"><![CDATA[%dw 2.0
+output application/java
+var utc = "UTC" as TimeZone
+fun getFormattedDate()=(now() >> utc) as String {format: "ddMMuuuu"}
+---
+'swift_' ++ getFormattedDate()]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+		<try doc:name="Try" doc:id="38da9abd-a49f-4f7a-ba9a-08303571e196">
+			<ee:transform doc:name="Request Payload" doc:id="58e5cad1-9e1f-4480-9ba8-37aaa79bf7b4" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="requestPayload" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+    "bucketName": "bladex-test",
+    "objectKey": vars.S3FileName,
+    "contentType": "text/plain"
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<http:request method="POST" doc:name="SAPI Amazon S3 Get Object" doc:id="bb50853a-03e1-48cf-8a8e-f7b834de5425" target="S3ExistingObject" url="https://sapi-amazon-s3.us-e2.cloudhub.io/api/GetObject">
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+vars.requestPayload]]]></http:body>
+				<http:headers ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	'client_id': p('sapi.amazon.s3.client_id'),
+	'client_secret': p('sapi.amazon.s3.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+			</http:request>
+			<ee:transform doc:name="S3 File" doc:id="ce595739-1cc7-4663-b4d9-86670391783d">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="S3File"><![CDATA[%dw 2.0
+output text/plain
+import * from modules::commonFunctions
+---
+vars.S3ExistingObject 
+++ "\n" ++
+(
+valuesOf(
+    (
+        ( if(isEmpty(payload.FinancialGatewayOperatingSession)) {} else getValues(payload.FinancialGatewayOperatingSession) )        
+        ++
+        ( if(isEmpty(payload.Outbound)) {} else getValues(payload.Outbound) )
+    )
+)  joinBy ";"
+)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="0bd76a34-acf7-4de1-bd49-7e142126112e" type="HTTP:NOT_FOUND">
+					<ee:transform doc:name="S3 File" doc:id="f72db362-805f-4fea-b8e9-68178563f47d">
+						<ee:message />
+						<ee:variables>
+							<ee:set-variable variableName="S3File"><![CDATA[%dw 2.0
+output text/plain
+import * from modules::commonFunctions
+---
+(
+valuesOf(
+    (
+        ( if(isEmpty(payload.FinancialGatewayOperatingSession)) {} else getHeaders(payload.FinancialGatewayOperatingSession) )        
+        ++
+        ( if(isEmpty(payload.Outbound)) {} else getHeaders(payload.Outbound) )
+    )
+)  joinBy ";"
+)
+++ "\n" ++
+(
+valuesOf(
+    (
+        ( if(isEmpty(payload.FinancialGatewayOperatingSession)) {} else getValues(payload.FinancialGatewayOperatingSession) )        
+        ++
+        ( if(isEmpty(payload.Outbound)) {} else getValues(payload.Outbound) )
+    )
+)  joinBy ";"
+)]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</flow>
+	<flow name="Generate-file-per-transaction" doc:id="8cae1b91-c915-46b2-acbb-7f7c6fdfcddb" >
+		<ee:transform doc:name="S3 Filename" doc:id="a6788f17-98c2-4769-be0d-6b3e463c93ea" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="S3FileName" ><![CDATA[%dw 2.0
+output application/java
+var utc = "UTC" as TimeZone
+fun getFormattedDate()=(now() >> utc) as String {format: "ddMMuuuuHHmmss"}
+---
+'swift_' ++ getFormattedDate()]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="S3 File" doc:id="66d89e2c-a42c-442a-8f9b-14467208dfa4">
+						<ee:message />
+						<ee:variables>
+							<ee:set-variable variableName="S3File"><![CDATA[%dw 2.0
+output text/plain
+import * from modules::commonFunctions
+---
+(
+valuesOf(
+    (
+        ( if(isEmpty(payload.FinancialGatewayOperatingSession)) {} else getHeaders(payload.FinancialGatewayOperatingSession) )        
+        ++
+        ( if(isEmpty(payload.Outbound)) {} else getHeaders(payload.Outbound) )
+    )
+)  joinBy ";"
+)
+++ "\n" ++
+(
+valuesOf(
+    (
+        ( if(isEmpty(payload.FinancialGatewayOperatingSession)) {} else getValues(payload.FinancialGatewayOperatingSession) )        
+        ++
+        ( if(isEmpty(payload.Outbound)) {} else getValues(payload.Outbound) )
+    )
+)  joinBy ";"
+)]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+	</flow>
+	<flow name="put-object-to-s3" doc:id="0e468722-e440-4efd-ace6-468334802c97">
+		<ee:transform doc:name="Request Payload" doc:id="3bfed282-98e2-4048-8f14-2ba4712aff4f">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="requestPayload"><![CDATA[%dw 2.0
+output application/java
+---
+{
+    "bucketName": "bladex-test",
+    "objectKey": vars.S3FileName,
+    "content": vars.S3File,
+    "contentType": "text/plain"
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<http:request method="POST" doc:name="SAPI Amazon S3 Put Object" doc:id="bd6df8e7-dd31-4dfc-bea0-fb65f814671b" url="https://sapi-amazon-s3.us-e2.cloudhub.io/api/PutObject" target="S3Response">
+			<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+vars.requestPayload]]]></http:body>
+			<http:headers ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	'client_id': p('sapi.amazon.s3.client_id'),
+	'client_secret': p('sapi.amazon.s3.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Put Object to S3 Response" doc:id="e9dec9ff-3d57-40e5-a40b-49a32533f8ff">
+			<ee:message>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="S3Response" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.S3Response]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+	<flow name="Additional-implementation-initiate" doc:id="a7d7692a-bce3-406f-ba7f-0fdc2ab96cb6" >
+		<ee:transform doc:name="Endpoint Response" doc:id="87cc34cc-5345-49ff-ba64-a2612bff5677">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  FinancialGatewayOperatingSession: {
+    FinancialGatewayServiceSessionStatistics: payload.FinancialGatewayOperatingSession.FinancialGatewayServiceSessionStatistics
+  },
+  Outbound: {
+    FinancialGatewayOutboundMessageStatus: payload.Outbound.FinancialGatewayOutboundMessageStatus
+  }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Datos del request" doc:id="f5f11179-3e6f-4c76-9bb9-32c8bcf6c3d1" message='#["Enviar transferencia Internacional por Swift completo. Financial gateway id: " ++ vars.financialgatewayid]' />
+	</flow>
+</mule>

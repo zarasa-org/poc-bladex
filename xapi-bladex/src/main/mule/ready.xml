@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="Ready-process" doc:id="91f1b737-03ac-46b2-ae59-7636542e474b" >
+		<http:request method="GET" doc:name="PAPI Bladex" doc:id="e1a60803-a728-4d70-874d-08fb2b15d3ca" config-ref="HTTP_Request_configuration" path='/Ready'>
+			<http:headers><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	'client_id': p('papi.bladex.client_id'),
+	'client_secret': p('papi.bladex.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+			<http:response-validator >
+				<http:success-status-code-validator values="200..399" />
+			</http:response-validator>
+		</http:request>
+		<ee:transform doc:name="Success Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  appName: "XAPI Bladex",
+  status: "UP",
+  dependencies: [
+    payload
+  ]
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<logger level="INFO" doc:name="Ready process completed!" doc:id="f3adcd59-b6e5-433c-9480-40e8bedcdd9b" message="Ready process completed!"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1a891fa9-ba1e-40b6-b7a4-53a8a1dbd0ec" >
+				<ee:transform doc:name="Failed Response" doc:id="0c0978f0-8942-4811-bfca-25d7ab94659d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  appName: "XAPI Bladex",
+  status: "DOWN"  
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

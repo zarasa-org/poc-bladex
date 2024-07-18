@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_c6f9fc8b_8a2f_4b86_b69b_559d60c74395_Input_Variables_MQMessage = Any
+

@@ -1,0 +1,62 @@
+#%RAML 1.0
+title: SAPI Amazon MQ
+
+securitySchemes:
+  bladexSecurity: !include security-scheme/bladexSecurityScheme.raml
+
+securedBy:
+  - bladexSecurity
+
+types:
+  pingResponse: !include types/pingResponse.raml
+  readyResponse: !include types/readyResponse.raml
+  
+traits:
+  error-responses-trait: !include error-responses-trait/error-responses-trait.raml
+
+uses:
+  sapi-amazon-mq-resource-type: libraries/sapi-amazon-mq-resource-type.raml
+
+/PublishMessage/{queuename}:
+  description: publica mensajes a un queue de Amazon
+  post:
+    body:
+      application/json:
+        #type: initiateBody
+        #example: !include examples/initiateBody.json
+    responses:
+      200:
+        description: 200 OK - The request succeeded.
+        headers:
+          Content-Type:
+            description: Content type returned by api is JSON.
+            example: application/json; charset=UTF-8
+        body:
+          application/json:
+            #type: initiateResponse
+            #example: !include examples/initiateResponse.json
+    is: [ error-responses-trait ]
+
+/ConsumeMessage/{queuename}:
+  description: Consume mensajes a un queue de Amazon
+  get:
+    responses:
+      200:
+        description: 200 OK - The request succeeded.
+        headers:
+          Content-Type:
+            description: Content type returned by api is JSON.
+            example: application/json; charset=UTF-8
+        body:
+          application/json:
+            #type: initiateResponse
+            #example: !include examples/initiateResponse.json
+    is: [ error-responses-trait ]
+
+/Ping:
+  type: {sapi-amazon-mq-resource-type.pingCollection: {exampleReference: !include examples/pingResponse.json, typeReference: pingResponse }}
+  get:
+
+/Ready:
+  type: {sapi-amazon-mq-resource-type.readyCollection: {exampleReference: !include examples/readyResponse.json, typeReference: readyResponse }}
+  get:

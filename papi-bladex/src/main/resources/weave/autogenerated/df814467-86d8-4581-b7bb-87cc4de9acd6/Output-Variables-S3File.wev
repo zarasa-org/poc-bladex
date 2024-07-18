@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_df814467_86d8_4581_b7bb_87cc4de9acd6_Output_Variables_S3File = Any
+

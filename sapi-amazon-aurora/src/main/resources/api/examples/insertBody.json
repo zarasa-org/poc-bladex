@@ -1,0 +1,14 @@
+{
+    "query": "INSERT INTO bladex.financial_gateway(service_type, service_session_statistics, outbound_message_type, outbound_message_record, outbound_message_sender, outbound_message_receiver, outbound_message_status) VALUES (:FinancialGatewayServiceType, :FinancialGatewayServiceSessionStatistics, :FinancialGatewayOutboundMessageType, :FinancialGatewayOutboundMessageRecord, :FinancialGatewayOutboundMessageSender, :FinancialGatewayOutboundMessageReceiver, :FinancialGatewayOutboundMessageStatus)",
+    "parameters": {
+        
+            "FinancialGatewayServiceType": "SapiTest",
+            "FinancialGatewayServiceSessionStatistics": "SapiTest",
+            "FinancialGatewayOutboundMessageType": "SapiTest",
+            "FinancialGatewayOutboundMessageRecord": "SapiTest",
+            "FinancialGatewayOutboundMessageSender": "SapiTest",
+            "FinancialGatewayOutboundMessageReceiver": "SapiTest",
+            "FinancialGatewayOutboundMessageStatus": "SapiTest"
+        
+    }
+}

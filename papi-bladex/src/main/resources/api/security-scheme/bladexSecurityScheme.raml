@@ -1,0 +1,16 @@
+#%RAML 1.0 SecurityScheme
+
+type: x-bladex-security
+description: bladex security scheme client_id and client_secret
+describedBy:
+  headers:
+    client_id:
+      example: 39c9547f08d6498194391d7b81811bc1
+      type: string
+      description: The Client ID that is required to authenticate requestor. The client id and client secret tokens are given to Client application when they get access to this API. These are needed in every request made to this API.
+      required: true
+    client_secret:
+      example: 9B60A6117a6E405a92810C2ee28B6837
+      type: string
+      description: The Client Secret that is required to authenticate requestor. The client id and client secret tokens are given to Client application when they get access to this API. These are needed in every request made to this API.
+      required: true

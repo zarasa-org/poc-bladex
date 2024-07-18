@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd  http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="sapi-amazon-mq-main">
+        <http:listener config-ref="sapi-amazon-mq-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload default error.description]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="sapi-amazon-mq-config" />
+        <error-handler ref="default-error-handler" />
+    </flow>
+    <flow name="sapi-amazon-mq-console">
+        <http:listener config-ref="sapi-amazon-mq-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="sapi-amazon-mq-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\ConsumeMessage\(queuename):sapi-amazon-mq-config">
+		<ee:transform doc:name="Set Variable Queue Name">
+            <ee:variables>
+                <ee:set-variable variableName="queuename">attributes.uriParams.'queuename'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+		<jms:consume doc:name="Consume Message" doc:id="61b258b2-b68a-40e6-bf06-b5ca8e2bcbca" config-ref="JMS_Config" destination="#[vars.queuename]" ackMode="IMMEDIATE" contentType="application/json">
+            <jms:consumer-type>
+                <jms:queue-consumer />
+            </jms:consumer-type>
+        </jms:consume>
+		<logger level="INFO" doc:name="Consume Message Completed!" doc:id="9ab038da-c116-4461-8940-214ee83b60c4" message="Consume Message Completed!"/>
+		<error-handler ref="consume-error-handler" />
+    </flow>
+    <flow name="get:\Ping:sapi-amazon-mq-config">
+		<flow-ref doc:name="Ping Process" doc:id="760d0882-5697-453f-b155-24cf1c6e6fc9" name="Ping-process" />
+    </flow>
+    <flow name="get:\Ready:sapi-amazon-mq-config">
+		<flow-ref doc:name="Ready Process" doc:id="6eda8aed-e6e4-4174-9a1d-b5fdad81bc37" name="Ready-process" />
+    </flow>
+    <flow name="post:\PublishMessage\(queuename):application\json:sapi-amazon-mq-config">
+		<ee:transform doc:name="Set Variable Queue Name">
+            <ee:variables>
+                <ee:set-variable variableName="queuename">attributes.uriParams.'queuename'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+		<jms:publish doc:name="Publish to Bladex MQ" doc:id="6141b0bd-0b0f-4aef-9b66-e75a9b0ab0e5" config-ref="JMS_Config" destination="#[vars.queuename]" sendCorrelationId="ALWAYS" persistentDelivery="true" disableMessageId="false" disableMessageTimestamp="false">
+            <jms:message outboundContentType="application/json">
+                <jms:body><![CDATA[#[%dw 2.0
+output application/json
+---
+payload]]]></jms:body>
+            </jms:message>
+        </jms:publish>
+		<logger level="INFO" doc:name="Publish Message Completed!" doc:id="3ae855a7-3218-464b-b20c-6cb2bb1750eb" message="Publish Message Completed!" />
+    </flow>
+</mule>

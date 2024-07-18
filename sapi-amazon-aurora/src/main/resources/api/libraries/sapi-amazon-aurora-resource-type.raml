@@ -1,0 +1,58 @@
+#%RAML 1.0 Library
+
+traits:
+  error-responses-trait: !include ../error-responses-trait/error-responses-trait.raml
+  success-response-trait: !include ../traits/successResponse.raml
+
+resourceTypes:
+  insertCollection:
+    description: Inserta un trama en la bd
+    post:
+      body:
+        application/json:
+          type: <<typeReference>>
+          example: <<exampleReference>>
+      responses:
+        200:
+          description: 200 OK - The request succeeded.
+          headers:
+            Content-Type:
+              description: Content type returned by api is JSON.
+              example: application/json; charset=UTF-8
+          body:
+            application/json:
+              #type: initiateResponse
+              #example: !include examples/initiateResponse.json
+      is: [ error-responses-trait ]
+
+  bulkInsertCollection:
+    description: Inserta un conjunto de tramas en la bd
+    post:
+      body:
+        application/json:
+          #type: insertBody
+          #example: !include examples/insertBody.json
+      responses:
+        200:
+          description: 200 OK - The request succeeded.
+          headers:
+            Content-Type:
+              description: Content type returned by api is JSON.
+              example: application/json; charset=UTF-8
+          body:
+            application/json:
+              #type: initiateResponse
+              #example: !include examples/initiateResponse.json
+      is: [ error-responses-trait ]
+
+  pingCollection:
+    get:
+      displayName: Ping Endpoint
+      description: Verifies the app is up and running. Response alive or dead.
+      is: [ success-response-trait: { typeReference: <<typeReference>>, exampleReference: <<exampleReference>> } ]
+
+  readyCollection:
+    get:
+      displayName: Ready Endpoint
+      description: Verifies if the app and downstream services are up and running. Response is a per-service status (UP or DOWN).
+      is: [ success-response-trait: { typeReference: <<typeReference>>, exampleReference: <<exampleReference>> } ]

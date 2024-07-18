@@ -1,0 +1,9 @@
+%dw 2.0
+
+type auto_0e468722_e440_4efd_ace6_468334802c97_Output_Variables_requestPayload = {|
+  bucketName: String, 
+  objectKey: Null, 
+  content: Null, 
+  contentType: String
+|}
+

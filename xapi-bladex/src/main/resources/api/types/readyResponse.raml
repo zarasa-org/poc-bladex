@@ -1,0 +1,37 @@
+#%RAML 1.0 DataType 
+type: object
+properties:
+  appName:
+    type: string
+    example: XAPI Bladex
+    required: false
+  status:
+    type: string
+    example: UP
+    required: false
+  dependencies:
+    type: array
+    items:
+      type: object
+      properties:
+        appName:
+          type: string
+          example: PAPI Bladex
+          required: false
+        status:
+          type: string
+          example: UP
+          required: false
+        dependencies:
+          type: array
+          items:
+            type: object
+            properties:
+              appName:
+                type: string
+                example: SAPI Amazon Aurora
+                required: false
+              status:
+                type: string
+                example: UP
+                required: false

@@ -1,0 +1,26 @@
+%dw 2.0
+
+type auto_d9023a81_fcfc_4190_a249_f54e9231f0f1_Input_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {|  |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {|
+    financialgatewayid: String, 
+    outboundid: String
+  |}, 
+  version: String, 
+  localAddress: String
+|}
+

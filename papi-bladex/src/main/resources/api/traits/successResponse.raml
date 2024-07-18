@@ -1,0 +1,13 @@
+#%RAML 1.0 Trait
+description: Succesful response.
+responses:
+  200:
+    description: 200 OK - The request succeeded.
+    headers:
+      Content-Type:
+        description: Content type returned by api is JSON.
+        example: application/json; charset=UTF-8
+    body:
+      application/json:
+        type: <<typeReference>>
+        example: <<exampleReference>>

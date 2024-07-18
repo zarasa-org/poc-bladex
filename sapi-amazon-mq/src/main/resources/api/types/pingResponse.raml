@@ -1,0 +1,15 @@
+#%RAML 1.0 DataType 
+type: object
+additionalProperties: false
+description: Ping endpoint should return this response if app is running.
+properties:
+  httpStatus:
+    description: Status refers to the numerical value assigned to the status code.
+    type: number
+    example: 200
+    required: false
+  status:
+    description: Describes status of the application.
+    type: string
+    example: Alive
+    required: false

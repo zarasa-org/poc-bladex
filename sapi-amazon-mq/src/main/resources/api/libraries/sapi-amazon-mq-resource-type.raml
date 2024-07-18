@@ -1,0 +1,18 @@
+#%RAML 1.0 Library
+
+traits:
+  error-responses-trait: !include ../error-responses-trait/error-responses-trait.raml
+  success-response-trait: !include ../traits/successResponse.raml
+
+resourceTypes:
+  pingCollection:
+    get:
+      displayName: Ping Endpoint
+      description: Verifies the app is up and running. Response alive or dead.
+      is: [ success-response-trait: { typeReference: <<typeReference>>, exampleReference: <<exampleReference>> } ]
+
+  readyCollection:
+    get:
+      displayName: Ready Endpoint
+      description: Verifies if the app and downstream services are up and running. Response is a per-service status (UP or DOWN).
+      is: [ success-response-trait: { typeReference: <<typeReference>>, exampleReference: <<exampleReference>> } ]

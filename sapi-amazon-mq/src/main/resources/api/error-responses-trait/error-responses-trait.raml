@@ -1,0 +1,63 @@
+#%RAML 1.0 Trait
+description: This is used to provide standard error response for all the consuming APIs.
+responses:
+  400:
+    description: This response is sent when a resource sends a bad request.
+    headers:
+      Content-Type:
+        description: Content type returned by api is JSON.
+        example: application/json; charset=UTF-8
+    body:
+      application/json:
+        type: !include types/error-data-type.raml
+        example: !include examples/errorResponse.json
+  401:
+    description: This response is sent when a resource makes an unauthorized request
+    headers:
+      Content-Type:
+        description: Content type returned by api is JSON.
+        example: application/json; charset=UTF-8
+    body:
+      application/json: 
+        type: !include types/error-data-type.raml
+        example: !include examples/errorResponse.json
+  403:
+    description: This response is sent when a the server understood the request but refuses to authorize it.
+    headers:
+      Content-Type:
+        description: Content type returned by api is JSON.
+        example: application/json; charset=UTF-8
+    body:
+      application/json: 
+        type: !include types/error-data-type.raml
+        example: !include examples/errorResponse.json     
+  404:
+    description: This response is sent when a resource is not found.
+    headers:
+      Content-Type:
+        description: Content type returned by api is JSON.
+        example: application/json; charset=UTF-8
+    body:
+      application/json:
+        example: !include examples/errorResponse.json
+        type: !include types/error-data-type.raml
+  429:
+    description: This response is returned when api recieves too many requests.
+    headers:
+      Content-Type:
+        description: Content type returned by api is JSON.
+        example: application/json; charset=UTF-8
+    body:
+      application/json:
+        example: !include examples/errorResponse.json
+        type: !include types/error-data-type.raml
+  500:
+    description: This response is returned at internal server error.
+    headers:
+      Content-Type:
+        description: Content type returned by api is JSON.
+        example: application/json; charset=UTF-8
+    body:
+      application/json:
+        example: !include examples/errorResponse.json
+        type: !include types/error-data-type.raml

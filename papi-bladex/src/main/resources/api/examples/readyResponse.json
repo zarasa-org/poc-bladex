@@ -1,0 +1,18 @@
+{
+    "appName": "PAPI Bladex",
+    "status": "UP",
+    "dependencies": [
+        {
+            "appName": "SAPI Amazon Aurora",
+            "status": "UP"
+        },
+        {
+            "appName": "SAPI Amazon S3",
+            "status": "UP"
+        },
+        {
+            "appName": "SAPI Amazon MQ",
+            "status": "UP"
+        }
+    ]
+}

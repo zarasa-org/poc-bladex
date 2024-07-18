@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="Ready-process" doc:id="91f1b737-03ac-46b2-ae59-7636542e474b" >
+		<flow-ref doc:name="Dependencies Flow" doc:id="a274516f-9016-4a5a-95f1-870802558f75" name="dependenciesFlow"/>
+		<ee:transform doc:name="response dependency" doc:id="6f63b104-108b-4ad6-b329-e0920dbfb75a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"appName": "PAPI Bladex",
+	"status": "UP",
+	"dependencies":[
+			payload[0].payload,
+            payload[1].payload,
+            payload[2].payload
+    ]
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<logger level="INFO" doc:name="Ready process completed!" doc:id="f3adcd59-b6e5-433c-9480-40e8bedcdd9b" message="Ready process completed!"/>
+		<error-handler ref="health-error-handler" />
+	</flow>
+	<flow name="dependenciesFlow" doc:id="a69c1354-0a50-4238-a258-8d4effac95ba" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="ed24ef68-2b09-4a6d-8195-65c027f1aeb2" >
+			<route >
+				<http:request method="GET" doc:name="SAPI Amazon Aurora" doc:id="087496da-5532-4927-bed4-d93e6f060b54" url="https://sapi-amazon-aurora.us-e2.cloudhub.io/api/Ready">
+			<http:headers><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	'client_id': p('sapi.amazon.aurora.client_id'),
+	'client_secret': p('sapi.amazon.aurora.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+					<http:response-validator >
+						<http:success-status-code-validator values="200..399" />
+					</http:response-validator>
+		</http:request>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="SAPI Amazon S3" doc:id="c8e56986-6f3b-43e2-965c-c3003944eef8" url="https://sapi-amazon-s3.us-e2.cloudhub.io/api/Ready">
+			<http:headers><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	'client_id': p('sapi.amazon.s3.client_id'),
+	'client_secret': p('sapi.amazon.s3.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+					<http:response-validator >
+						<http:success-status-code-validator values="200..399" />
+					</http:response-validator>
+		</http:request>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="SAPI Amazon MQ" doc:id="941787e7-2ea1-48da-89a7-b0a772405221" url="https://sapi-amazon-mq.us-e2.cloudhub.io/api/Ready">
+					<http:headers><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	'client_id': p('sapi.amazon.mq.client_id'),
+	'client_secret': p('sapi.amazon.mq.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+					<http:response-validator>
+						<http:success-status-code-validator values="200..399" />
+					</http:response-validator>
+				</http:request>
+			</route>
+		</scatter-gather>
+	</flow>
+</mule>

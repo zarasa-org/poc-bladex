@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="default-error-handler">
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "400",
+  "status": "Failed",
+  "message": "Bad request"
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "404",
+  "status": "Failed",
+  "message": "Resource not found"
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "405",
+  "status": "Failed",
+  "message": "Method not allowed"
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "406",
+  "status": "Failed",
+  "message": "Not acceptable"
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "415",
+  "status": "Failed",
+  "message": "Unsupported media type"
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "501",
+  "status": "Failed",
+  "message": "Not Implemented"
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+	<error-handler name="health-error-handler" doc:id="253fd16d-1dac-4312-8d27-75de55073653" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="24054971-d902-44c4-a65b-9601f23a18bc" type="MULE:COMPOSITE_ROUTING" >
+			<set-variable value="#[output application/json --- error.errorMessage.payload.failures pluck ($$)]" doc:name="failedRouteIndex" doc:id="81ea528f-d09c-48a9-9663-842913b4ca4d" variableName="failedRouteIndex" />
+			<set-variable value="#[output application/json --- error.errorMessage.payload.results pluck ($$)]" doc:name="successRouteIndex" doc:id="8dfda7e8-d0ee-4bcd-b4e8-3ee577437c9b" variableName="successRouteIndex" />
+			<ee:transform doc:name="backendServices" doc:id="96e8f4c1-6c56-4da2-9002-f3bed3928ff3" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="backendServices" ><![CDATA[%dw 2.0
+output application/java
+import * from dw::core::Strings
+---
+error.cause.info.'Element DSL' splitBy("route") filter (!($ contains "scatter-gather") and ($ contains "doc:name") ) map ((item, index) -> substringBefore( substringAfter(item, "doc:name=\""),"\"") )]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<ee:transform doc:name="failedRoutePayload" doc:id="2a9522b1-2131-44ce-9a40-e86ea4876d51" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="failedRoutePayload" ><![CDATA[%dw 2.0
+output application/json
+---
+map (vars.failedRouteIndex, ((value, index) -> ( 
+{
+	"appName": vars.backendServices[value as Number],
+	"status": "DOWN",
+	"error": error.errorMessage.payload.failures[0].description
+})))]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<ee:transform doc:name="successRoutePayload" doc:id="53417327-19b7-4478-8d34-ce9bc52a784b" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="successRoutePayload" ><![CDATA[%dw 2.0
+output application/json
+---
+map (vars.successRouteIndex, ((value, index) -> ( 
+{
+	"appName": vars.backendServices[value as Number],
+	"status": "UP"
+})))]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<ee:transform doc:name="response dependency" doc:id="2fb005d4-26fe-4836-bcc9-136749ead06a" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"appName": "PAPI Bladex",
+	"status": "DOWN",
+	"dependencies": flatten( vars.failedRoutePayload << vars.successRoutePayload )
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables />
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+	
+
+</mule>

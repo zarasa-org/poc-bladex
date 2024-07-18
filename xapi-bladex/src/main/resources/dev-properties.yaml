@@ -1,0 +1,15 @@
+http:
+  port: "8081"
+  host: "0.0.0.0"
+  
+https:
+  port: "8082"
+  host: "0.0.0.0"
+  
+api:
+  id: "19720679"
+  
+papi:
+  bladex:
+    client_id: "5314eb02c73a4e3ab4e06e069a7889f9"
+    client_secret: "B074A3CF1F46447C9Ee89f3811e798eE"

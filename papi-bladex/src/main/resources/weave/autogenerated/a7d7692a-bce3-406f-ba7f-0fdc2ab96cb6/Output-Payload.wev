@@ -1,0 +1,7 @@
+%dw 2.0
+
+type auto_a7d7692a_bce3_406f_ba7f_0fdc2ab96cb6_Output_Payload = {|
+  FinancialGatewayOperatingSession: {| FinancialGatewayServiceSessionStatistics: Null |}, 
+  Outbound: {| FinancialGatewayOutboundMessageStatus: Null |}
+|}
+

@@ -1,0 +1,9 @@
+%dw 2.0
+
+type auto_a69c1354_0a50_4238_a258_8d4effac95ba_Output_Payload = {
+  appName?: String, 
+  status?: String, 
+  dependencies: Array<{    appName?: String,     status?: String,     _?: Any  }>, 
+  _?: Any
+}
+
