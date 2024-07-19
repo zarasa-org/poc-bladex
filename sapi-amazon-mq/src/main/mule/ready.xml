@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
 	<flow name="Ready-process" doc:id="91f1b737-03ac-46b2-ae59-7636542e474b" >
-		<ee:transform doc:name="Transform Message">
+		<flow-ref doc:name="Dependencies Flow" doc:id="59e0b71f-6a63-4d25-9096-b78cfedfccb8" name="dependenciesFlow" />
+		<ee:transform doc:name="Success Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -17,5 +19,13 @@ output application/json
             </ee:message>
         </ee:transform>
 		<logger level="INFO" doc:name="Ready process completed!" doc:id="f3adcd59-b6e5-433c-9480-40e8bedcdd9b" message="Ready process completed!"/>
+	</flow>
+	<flow name="dependenciesFlow" doc:id="85276366-0843-4153-a786-b72b4445ce15" >
+		<jms:consume doc:name="Consume" doc:id="0b3a8102-7f06-43cf-bcc2-cb58068cf0e4" config-ref="JMS_Config" destination="NonExistingQueue" maximumWait="2000">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:consume>
+		<error-handler ref="ready-error-handler" />
 	</flow>
 </mule>

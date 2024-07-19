@@ -93,6 +93,70 @@ output application/json
 	<error-handler name="error-handler-get-object" doc:id="72baf866-308d-4d0a-b29d-f2cbc0f3cfd5" >
 		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="05e99832-764d-4399-82b8-750208ecbf4f" type="S3:NO_SUCH_KEY" >
 			<set-variable value="404" doc:name="Http Status" doc:id="d677f97f-4024-46dc-ba9a-da6b76284be1" variableName="httpStatus" />
+			<ee:transform doc:name="Error Message" doc:id="d373c7f2-979b-45c9-94d5-ad4e2c55c442" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "404",
+  "status": "Failed",
+  "message": error.description
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables />
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="cac2d9f9-a660-4250-b5a1-a5c54f788b03" >
+			<ee:transform doc:name="Error Message" doc:id="ef860b21-ffac-44d7-8071-67a5694932f1" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "500",
+  "status": "Failed",
+  "message": error.description
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables />
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+	<error-handler name="ready-error-handler" doc:id="e7a47f03-1a2b-48b7-b9c3-e486f01d45a3">
+	<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8605d7e6-49c6-4ca2-b2d5-39e5852dd198" type="S3:NO_SUCH_BUCKET">
+					<logger level="INFO" doc:name="Connection is established!" doc:id="9801c29d-4da9-41b0-989d-93957125f1ab" message="No such bucket found, but connection is established!"/>
+				</on-error-continue>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f352d420-a0bf-4233-9afd-57373e7fae3a" type="ANY">
+					<ee:transform doc:name="Error Message" doc:id="0c8d3290-f1f7-4e27-b2f2-2d131d813336" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  appName: "SAPI Amazon S3",
+  status: "DOWN",
+  "error": error.description
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+	</error-handler>
+	<error-handler name="common-error-handler" doc:id="0a71a9ad-c18a-4229-84ce-8ba09b7bb25a" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="8ee3332d-27ea-4c88-824b-59601155a145" >
+			<ee:transform doc:name="Error Message" doc:id="fc6460b4-be7d-4f04-a64e-f77b1064e919" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "500",
+  "status": "Failed",
+  "message": error.description
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables />
+			</ee:transform>
 		</on-error-propagate>
 	</error-handler>
 	

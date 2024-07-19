@@ -89,6 +89,39 @@ output application/json
                 </ee:transform>
             </on-error-propagate>
         </error-handler>
+	<error-handler name="ready-error-handler" doc:id="44429c34-97f4-4115-8505-d5eed4339698" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="25fef18c-607c-41ec-aa4d-0fa4a06226d2" type="ANY" >
+			<ee:transform doc:name="Error Message" doc:id="b67cb025-f0f4-46ff-83a5-a10ccdcb9eb6" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  appName: "SAPI Amazon Aurora",
+  status: "DOWN",
+  "error": error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+	<error-handler name="common-error-handler" doc:id="2cf18850-87a8-4efd-aa01-355a47f0606b" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9f49b77d-fce8-439d-85d2-4cf4319e3cdd" >
+			<ee:transform doc:name="Error Message" doc:id="e91507c0-951b-4418-9b1b-6bb4184d389f" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "500",
+  "status": "Failed",
+  "message": error.description
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables />
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
 	
 
 </mule>

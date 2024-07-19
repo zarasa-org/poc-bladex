@@ -12,7 +12,7 @@ output application/java
 ---
 {
 	'client_id': p('papi.bladex.client_id'),
-	'client_secret': p('papi.bladex.client_secret'),
+	'client_secret': p('secure::papi.bladex.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 			<http:response-validator >

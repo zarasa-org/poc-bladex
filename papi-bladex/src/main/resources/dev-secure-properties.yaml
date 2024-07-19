@@ -1,0 +1,12 @@
+sapi:
+  amazon:
+    aurora:
+      client_secret: "345418c3B76F4F63Beddd8E5A1966fbE"
+    s3:
+      client_secret: "B0CC4E3b00A44659B7DC8c4A18e5E38d"
+    mq:
+      client_secret: "Bd044145521d4d71bf502e3D2153B908"
+      
+papi:
+  bladex:
+    client_secret: "![PLWAYraCfNQvM7MQ9ii0+T4+M1cENO5t8IuHZ0uYjuNkzyAeyzGzUw==]"

@@ -1,24 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:tracing="http://www.mulesoft.org/schema/mule/tracing" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
-	<flow name="Retrieve-process" doc:id="d9023a81-fcfc-4190-a249-f54e9231f0f1" >
-		<http:request method="GET" doc:name="SAPI Amazon MQ Consume" doc:id="73c8254d-0514-4478-b282-9acc017dacb8" url="#[&quot;https://sapi-amazon-mq.us-e2.cloudhub.io/api/ConsumeMessage/&quot; ++ p('amazon.queueName')]" target="MQMessage">
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/tracing http://www.mulesoft.org/schema/mule/tracing/current/mule-tracing.xsd">
+	<flow name="Retrieve-process" doc:id="d9023a81-fcfc-4190-a249-f54e9231f0f1" maxConcurrency="1">
+		<tracing:with-correlation-id doc:name="With CorrelationID" doc:id="7e47aafb-4e62-4058-a1db-80df978f3bd6" correlationId="#[vars.outboundid]">
+			<http:request method="GET" doc:name="SAPI Amazon MQ Consume" doc:id="73c8254d-0514-4478-b282-9acc017dacb8" url="#[&quot;https://sapi-amazon-mq.us-e2.cloudhub.io/api/ConsumeMessage/&quot; ++ p('amazon.queueName')]" target="MQMessage">
 			<http:headers><![CDATA[#[%dw 2.0
 output application/java
 ---
 {
 	'client_id': p('sapi.amazon.mq.client_id'),
-	'client_secret': p('sapi.amazon.mq.client_secret'),
+	'client_secret': p('secure::sapi.amazon.mq.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 		</http:request>
-		<ee:transform doc:name="BD Mapping" doc:id="09df60e4-6a82-423d-92d0-3dfd4d7dd4b3">
+			<ee:transform doc:name="BD Mapping" doc:id="09df60e4-6a82-423d-92d0-3dfd4d7dd4b3">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -30,7 +33,7 @@ vars.MQMessage]]></ee:set-payload>
 output application/java
 ---
 {
-	"query": "INSERT INTO bladex.financial_gateway(service_type, service_session_statistics, outbound_message_type, outbound_message_record, outbound_message_sender, outbound_message_receiver, outbound_message_status) VALUES (:FinancialGatewayServiceType, :FinancialGatewayServiceSessionStatistics, :FinancialGatewayOutboundMessageType, :FinancialGatewayOutboundMessageRecord, :FinancialGatewayOutboundMessageSender, :FinancialGatewayOutboundMessageReceiver, :FinancialGatewayOutboundMessageStatus)",
+	"query": "INSERT INTO " ++ p('sapi.amazon.aurora.schema') ++ ".financial_gateway(service_type, service_session_statistics, outbound_message_type, outbound_message_record, outbound_message_sender, outbound_message_receiver, outbound_message_status) VALUES (:FinancialGatewayServiceType, :FinancialGatewayServiceSessionStatistics, :FinancialGatewayOutboundMessageType, :FinancialGatewayOutboundMessageRecord, :FinancialGatewayOutboundMessageSender, :FinancialGatewayOutboundMessageReceiver, :FinancialGatewayOutboundMessageStatus)",
     "parameters": 
 	vars.MQMessage.FinancialGatewayOperatingSession mapObject ((value, key, index) -> (key): value)
 	++
@@ -38,23 +41,26 @@ output application/java
 }]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<http:request method="POST" doc:name="SAPI Amazon Aurora Insert" doc:id="f19bc0ce-9334-44fb-ab4c-b6f0f4990d26" url="https://sapi-amazon-aurora.us-e2.cloudhub.io/api/Insert" target="S3Response" >
-			<http:body ><![CDATA[#[%dw 2.0
+			<http:request method="POST" doc:name="SAPI Amazon Aurora Insert" doc:id="f19bc0ce-9334-44fb-ab4c-b6f0f4990d26" url="https://sapi-amazon-aurora.us-e2.cloudhub.io/api/Insert" target="S3Response">
+			<http:body><![CDATA[#[%dw 2.0
 output application/json
 ---
 vars.DBFormat]]]></http:body>
-			<http:headers ><![CDATA[#[%dw 2.0
+			<http:headers><![CDATA[#[%dw 2.0
 output application/java
 ---
 {
 	'client_id': p('sapi.amazon.aurora.client_id'),
-	'client_secret': p('sapi.amazon.aurora.client_secret'),
+	'client_secret': p('secure::sapi.amazon.aurora.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 		</http:request>
-		<flow-ref doc:name="Additional Implementation" doc:id="f32ff302-cdca-4da3-b3c1-0bbc0c20bc91" name="Additional-implementation"/>
+			<flow-ref doc:name="Additional Implementation" doc:id="f32ff302-cdca-4da3-b3c1-0bbc0c20bc91" name="Additional-implementation" />
+		</tracing:with-correlation-id>
+		<error-handler ref="common-error-handler" />
 	</flow>
-	<flow name="Additional-implementation" doc:id="c6f9fc8b-8a2f-4b86-b69b-559d60c74395" >
+	<flow name="Additional-implementation" doc:id="c6f9fc8b-8a2f-4b86-b69b-559d60c74395" maxConcurrency="1">
+		<os:remove doc:name="Remove" doc:id="d18ea573-36f8-498a-abf2-3d4b98036de2" key="#[vars.outboundid]" objectStore="Object_store"/>
 		<logger level="INFO" doc:name="Datos del request" doc:id="7aa9bf38-1452-4de7-b14d-b761d979b222" message='#["Recibir transferencia internacional por Swift completo. Financial gateway id: " ++ vars.financialgatewayid ++ ", outboundid: " ++ vars.outboundid]'/>
 	</flow>
 </mule>

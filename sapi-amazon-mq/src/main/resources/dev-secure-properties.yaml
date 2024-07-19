@@ -1,0 +1,5 @@
+amazon:
+  aurora:
+    brokerUrl: "ssl://b-520a5278-9243-4eb2-b255-15c9c566fa75-1.mq.us-east-2.amazonaws.com:61617"
+    user: "BladexTest"
+    password: "![Qi4DAZ4ViodHEoXg6KFGjw==]"

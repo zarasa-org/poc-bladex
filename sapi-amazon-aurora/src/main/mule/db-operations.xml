@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="insert" doc:id="fac5fa24-6206-4dd1-ace3-da9bc548acb2" >
+		<ee:transform doc:name="Payload to java format" doc:id="2486d979-ac4f-4ed7-91fb-7d638514b965">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<db:insert doc:name="Insert" doc:id="fad3d1fb-4f83-4458-8f94-3d335d50a813" config-ref="Database_Config">
+            <db:sql><![CDATA[#[payload.query]]]></db:sql>
+            <db:input-parameters><![CDATA[#[payload.parameters]]]></db:input-parameters>
+        </db:insert>
+		<ee:transform doc:name="Payload to JSON Format">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<logger level="INFO" doc:name="Insert operation completed!" doc:id="c50efb9f-aeae-4658-af52-290933b013e6" message="Insert operation completed!" />
+		<error-handler ref="common-error-handler" />
+	</flow>
+	<flow name="bulk-insert" doc:id="cf19ae2a-d1e0-4271-a0f2-9d1a7d43fb42" >
+		<ee:transform doc:name="Payload to java format" doc:id="cadd5602-9098-4dc2-9c48-4d8291544ad8">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="ed574334-9914-4cc7-96c6-a9b109b5ddd6" config-ref="Database_Config">
+            <db:bulk-input-parameters><![CDATA[#[payload.parameters]]]></db:bulk-input-parameters>
+            <db:sql><![CDATA[#[payload.query]]]></db:sql>
+        </db:bulk-insert>
+		<ee:transform doc:name="Payload to JSON Format">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<logger level="INFO" doc:name="Bulk insert operation completed!" doc:id="00171ae5-1de9-473b-8c73-2370005463dd" message="Bulk insert operation completed!"/>
+		<error-handler ref="common-error-handler" />
+	</flow>
+</mule>

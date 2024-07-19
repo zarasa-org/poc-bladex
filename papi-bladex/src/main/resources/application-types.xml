@@ -1503,4 +1503,5 @@ type auto_a7d7692a_bce3_406f_ba7f_0fdc2ab96cb6_Output_Variables_S3File = Any
       </types:output-event>
     </types:processor-declaration>
   </types:enrichment>
+  <types:enrichment select="#024a0131-f3d7-46a0-835b-0e0511d19ce4"/>
 </types:mule>

@@ -19,15 +19,13 @@ sapi:
   amazon:
     aurora:
       client_id: "3ff975f9f37540fc850f74d1d3f91cd6"
-      client_secret: "345418c3B76F4F63Beddd8E5A1966fbE"
+      schema: "bladex"
     s3:
       client_id: "f92b8041b6444cd48b6dd072509c34af"
-      client_secret: "B0CC4E3b00A44659B7DC8c4A18e5E38d"
+      bucketName: "bladex-test"
     mq:
       client_id: "c3f9224a97b74fe1b44c6a32bae9c9b2"
-      client_secret: "Bd044145521d4d71bf502e3D2153B908"
       
 papi:
   bladex:
     client_id: "5314eb02c73a4e3ab4e06e069a7889f9"
-    client_secret: "B074A3CF1F46447C9Ee89f3811e798eE"

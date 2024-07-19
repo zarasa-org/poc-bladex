@@ -169,6 +169,23 @@ output application/json
 			</ee:transform>
 		</on-error-propagate>
 	</error-handler>
+	<error-handler name="common-error-handler" doc:id="1b0ab09d-47e4-4cfd-91a3-6a8f28d9c876" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d9a894e4-fcb2-465c-ab52-a208a22e1c22" >
+			<ee:transform doc:name="Error Message" doc:id="e98dee00-1ab3-4514-b969-2d56db247fe2" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "500",
+  "status": "Failed",
+  "message": error.description
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables />
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
 	
 
 </mule>

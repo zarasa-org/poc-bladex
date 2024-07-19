@@ -8,3 +8,7 @@ https:
   
 api:
   id: "19722274"
+  
+amazon:
+  s3:
+    defaultBucketName: "bladex-test"

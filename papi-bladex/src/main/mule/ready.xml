@@ -36,7 +36,7 @@ output application/java
 ---
 {
 	'client_id': p('sapi.amazon.aurora.client_id'),
-	'client_secret': p('sapi.amazon.aurora.client_secret'),
+	'client_secret': p('secure::sapi.amazon.aurora.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 					<http:response-validator >
@@ -51,7 +51,7 @@ output application/java
 ---
 {
 	'client_id': p('sapi.amazon.s3.client_id'),
-	'client_secret': p('sapi.amazon.s3.client_secret'),
+	'client_secret': p('secure::sapi.amazon.s3.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 					<http:response-validator >
@@ -66,7 +66,7 @@ output application/java
 ---
 {
 	'client_id': p('sapi.amazon.mq.client_id'),
-	'client_secret': p('sapi.amazon.mq.client_secret'),
+	'client_secret': p('secure::sapi.amazon.mq.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 					<http:response-validator>

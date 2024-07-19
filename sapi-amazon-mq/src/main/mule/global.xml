@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
 	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
 	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
 http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
     <http:listener-config name="sapi-amazon-mq-httpListenerConfig">
         <http:listener-connection host="${https.host}" port="${https.port}" protocol="HTTPS">
             <tls:context>
@@ -22,10 +23,13 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
     <apikit:config name="sapi-amazon-mq-config" api="sapi-amazon-mq.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <configuration-properties doc:name="Configuration properties" doc:id="37361073-9a5b-44d4-beca-bad0fc9e1f49" file="${env}-properties.yaml" />
     <jms:config name="JMS_Config" doc:name="JMS Config" doc:id="51e2b8ef-8353-420d-8444-eda3c7df186d">
-        <jms:active-mq-connection username="BladexTest" password="Mulesoft2024#">
-            <jms:factory-configuration brokerUrl="ssl://b-520a5278-9243-4eb2-b255-15c9c566fa75-1.mq.us-east-2.amazonaws.com:61617" />
+        <jms:active-mq-connection username="${secure::amazon.aurora.user}" password="${secure::amazon.aurora.password}">
+            <jms:factory-configuration brokerUrl="${secure::amazon.aurora.brokerUrl}" />
         </jms:active-mq-connection>
     </jms:config>
     <global-property doc:name="Global Property" doc:id="0f51d2d5-f6fa-427e-9b69-7025a4473b34" name="env" value="dev" />
 	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="c87590f2-4bcd-4a65-90db-9a75f3e02e84" flowRef="sapi-amazon-mq-main" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="037b6953-0e6c-487e-ba46-402e2b3680c9" file="${env}-secure-properties.yaml" key="${secure.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
 </mule>

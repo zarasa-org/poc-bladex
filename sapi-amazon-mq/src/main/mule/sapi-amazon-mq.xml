@@ -75,5 +75,6 @@ payload]]]></jms:body>
             </jms:message>
         </jms:publish>
 		<logger level="INFO" doc:name="Publish Message Completed!" doc:id="3ae855a7-3218-464b-b20c-6cb2bb1750eb" message="Publish Message Completed!" />
+		<error-handler ref="publish-error-handler" />
     </flow>
 </mule>

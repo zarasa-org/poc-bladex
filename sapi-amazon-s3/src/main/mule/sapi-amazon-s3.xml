@@ -66,6 +66,7 @@ output application/json
 payload]]></ee:set-payload>
             </ee:message>
         </ee:transform>
+		<logger level="INFO" doc:name="Get object complete!" doc:id="c2e3436d-e91d-46ad-8d19-5e3ff638e74b" message="Get object complete!"/>
 		<error-handler ref="error-handler-get-object" />
     </flow>
     <flow name="post:\PutObject:application\json:sapi-amazon-s3-config">
@@ -88,5 +89,7 @@ output application/json
 payload]]></ee:set-payload>
             </ee:message>
         </ee:transform>
+		<logger level="INFO" doc:name="Put object complete!" doc:id="c47f1f05-d5a7-43d9-8124-201c4428a73f" message="Put object complete!" />
+		<error-handler ref="common-error-handler" />
     </flow>
 </mule>

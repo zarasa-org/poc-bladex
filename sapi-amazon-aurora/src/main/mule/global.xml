@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
 	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
 	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
 http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
 	<db:config name="Database_Config" doc:name="Database Config" doc:id="3000053e-18ba-4f98-ad31-c3c4ce652386" >
-		<db:generic-connection url="jdbc:postgresql://bladexdemopg-instance-1.c7ai8qwgmes7.us-east-2.rds.amazonaws.com:5432/bladex" driverClassName="org.postgresql.Driver" user="postgres" password="Zarasa123."/>
+		<db:generic-connection url="${secure::amazon.aurora.url}" driverClassName="org.postgresql.Driver" user="${secure::amazon.aurora.user}" password="${secure::amazon.aurora.password}"/>
 	</db:config>
 	<http:listener-config name="sapi-amazon-aurora-httpListenerConfig">
         <http:listener-connection host="${https.host}" port="${https.port}" protocol="HTTPS">
@@ -26,6 +27,7 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
 	<global-property doc:name="Global Property" doc:id="31eb89bd-47b1-4a12-b8a9-28b53ad4d7da" name="env" value="dev" />
 	<configuration-properties doc:name="Configuration properties" doc:id="614330c5-a6cf-40e5-b674-fce7c8dcdab6" file="${env}-properties.yaml" />
 	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="b8cd27ba-80fe-4ce9-bded-d7b6bd0e59ca" flowRef="sapi-amazon-aurora-main" />
-    
-
+    <secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="a4ee50c0-15c4-4050-9565-d8a6a7f4739f" file="${env}-secure-properties.yaml" key="${secure.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
 </mule>

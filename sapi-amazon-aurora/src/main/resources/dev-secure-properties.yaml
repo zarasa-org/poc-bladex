@@ -1,0 +1,5 @@
+amazon:
+  aurora:
+    user: "postgres"
+    password: "![SYETFUvZw57ATIssoolb8w==]"
+    url: "jdbc:postgresql://bladexdemopg-instance-1.c7ai8qwgmes7.us-east-2.rds.amazonaws.com:5432/bladex"

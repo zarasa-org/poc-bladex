@@ -44,48 +44,10 @@ output application/json
         <flow-ref doc:name="Ping Process" doc:id="24a2b642-6552-4597-95bd-6308891196eb" name="Ping-process" />
     </flow>
     <flow name="post:\BulkInsert:application\json:sapi-amazon-aurora-config">
-        <ee:transform doc:name="Transform Message1" doc:id="cadd5602-9098-4dc2-9c48-4d8291544ad8">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-payload]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
-        <db:bulk-insert doc:name="Bulk insert" doc:id="ed574334-9914-4cc7-96c6-a9b109b5ddd6" config-ref="Database_Config">
-            <db:bulk-input-parameters><![CDATA[#[payload.parameters]]]></db:bulk-input-parameters>
-            <db:sql><![CDATA[#[payload.query]]]></db:sql>
-        </db:bulk-insert>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="Bulk Insert" doc:id="1527b6e7-4a53-462f-8ebf-3fdd5e19f332" name="bulk-insert" />
     </flow>
     <flow name="post:\Insert:application\json:sapi-amazon-aurora-config">
-        <ee:transform doc:name="Transform Message2" doc:id="2486d979-ac4f-4ed7-91fb-7d638514b965">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-payload]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
-        <db:insert doc:name="Insert" doc:id="fad3d1fb-4f83-4458-8f94-3d335d50a813" config-ref="Database_Config">
-            <db:sql><![CDATA[#[payload.query]]]></db:sql>
-            <db:input-parameters><![CDATA[#[payload.parameters]]]></db:input-parameters>
-        </db:insert>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="Insert" doc:id="07ae5724-aa2b-4e08-91f5-f4937d41bfa3" name="insert" />
     </flow>
     <flow name="get:\Ready:sapi-amazon-aurora-config">
 		<flow-ref doc:name="Ready Process" doc:id="8380282f-63e1-4272-b136-8cfb8fc748a3" name="Ready-process" />

@@ -131,6 +131,59 @@ output application/json
 				</ee:variables>
 			</ee:transform>
 		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2e5b505c-911c-4f39-91c9-5eb42b016810" >
+			<ee:transform doc:name="Error Message" doc:id="efd2af56-2e06-4f12-b1cf-a51270b34455" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "500",
+  "status": "Failed",
+  "message": error.description
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+	<error-handler name="publish-error-handler" doc:id="bec53684-a412-41a0-9467-a7b5ce07a560" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9a91a914-bd11-4bde-959a-1a9815411dd6" >
+			<ee:transform doc:name="Error Message" doc:id="3b39543c-ff35-496c-b234-247122972caf" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status_code": "500",
+  "status": "Failed",
+  "message": error.description
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+	<error-handler name="ready-error-handler" doc:id="6e097df6-f065-412d-a21e-222b2d2e7395" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3a9b3b4d-e943-4069-9153-f4b9aece4307" type="JMS:DESTINATION_NOT_FOUND, JMS:TIMEOUT" >
+			<logger level="INFO" doc:name="Connection is established!" doc:id="497d33b6-9aea-4529-ab07-ea25a3d1ffe8" message="No such bucket found, but connection is established!" />
+		</on-error-continue>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1550b2db-7d71-4786-a281-3d29862d29f2" type="ANY" >
+			<ee:transform doc:name="Error Message" doc:id="5cdcef24-2902-4758-a198-9c610699f12c" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  appName: "SAPI Amazon MQ",
+  status: "DOWN",
+  "error": error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
 	</error-handler>
 
 	

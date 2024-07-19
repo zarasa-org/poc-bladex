@@ -64,10 +64,12 @@ output application/java
 ---
 {
 	'client_id': p('papi.bladex.client_id'),
-	'client_secret': p('papi.bladex.client_secret'),
+	'client_secret': p('secure::papi.bladex.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
         </http:request>
+		<logger level="INFO" doc:name="Retrieve completed!" doc:id="875f3069-7d0e-4037-8392-39c8027e79b7" message="Retrieve completed!"/>
+		<error-handler ref="common-error-handler" />
     </flow>
     <flow name="post:\FinancialGateway\(financialgatewayid)\Outbound\Initiate:application\json:xapi-bladex-config">
         <ee:transform doc:name="Set Variables financial gateway id">
@@ -85,10 +87,12 @@ output application/java
 ---
 {
 	'client_id': p('papi.bladex.client_id'),
-	'client_secret': p('papi.bladex.client_secret'),
+	'client_secret': p('secure::papi.bladex.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
         </http:request>
+		<logger level="INFO" doc:name="Initiate completed!" doc:id="ad73236f-5d2c-46d3-93c3-d33f51c2e2b4" message="Initiate completed!" />
+		<error-handler ref="common-error-handler" />
     </flow>
     <flow name="get:\Ready:xapi-bladex-config">
         <flow-ref doc:name="Ready Process" doc:id="195bdbd3-beb9-45b5-ba63-1dd723f26812" name="Ready-process" />

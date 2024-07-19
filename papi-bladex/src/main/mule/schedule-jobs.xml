@@ -7,15 +7,13 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 
-	<flow name="schedule-jobsFlow" doc:id="2d52ac11-dcaf-4afa-b318-f16b27d268a0" initialState="${scheduler.initialStatus}">
+	<flow name="schedule-jobsFlow" doc:id="2d52ac11-dcaf-4afa-b318-f16b27d268a0" initialState="${scheduler.initialStatus}" maxConcurrency="1">
 		<scheduler doc:name="Scheduler" doc:id="a17c766c-778e-4cee-a84b-48377d55ce59" >
 			<scheduling-strategy >
-				<fixed-frequency frequency="120" timeUnit="SECONDS"/>
+				<fixed-frequency frequency="300" timeUnit="SECONDS"/>
 			</scheduling-strategy>
 		</scheduler>
-		<os:retrieve doc:name="Retrieve Tramas" doc:id="8972507d-ddf9-491b-851b-7ccc80589a7d" key="tramas" objectStore="Object_store">
-			<os:default-value ><![CDATA[#[{}]]]></os:default-value>
-		</os:retrieve>
+		<os:retrieve-all doc:name="Retrieve all" doc:id="58efa055-8860-4c6d-8740-b63d3441c4a6" objectStore="Object_store"/>
 		<choice doc:name="Choice" doc:id="ef2d5612-5718-4115-8003-f1c8b4386a4e" >
 			<when expression="#[!isEmpty(payload)]">
 				<foreach doc:name="For Each" doc:id="0813ad70-307c-40bc-a0a6-6b9901844080" collection="#[dw::core::Objects::entrySet(payload)]">
@@ -33,18 +31,14 @@ output application/java
 payload.key]]></ee:set-variable>
 				</ee:variables>
 			</ee:transform>
-			<http:request method="GET" doc:name="Recibir transferencia internacional por Swift" doc:id="adc3a476-beb8-476a-9663-de096f6b19d3" config-ref="PAPI_HTTP_Request_configuration" path='#["/FinancialGateway/" ++ vars.financialgatewayid ++ "/Outbound/" ++ vars.outboundid ++ "/Retrieve"]' >
-						<http:body ><![CDATA[#[%dw 2.0
-output application/json
----
-payload]]]></http:body>
+			<http:request method="GET" doc:name="Recibir transferencia internacional por Swift" doc:id="adc3a476-beb8-476a-9663-de096f6b19d3" config-ref="PAPI_HTTP_Request_configuration" path='#["/FinancialGateway/" ++ vars.financialgatewayid ++ "/Outbound/" ++ vars.outboundid ++ "/Retrieve"]' responseTimeout="8000">
 						<http:headers ><![CDATA[#[%dw 2.0
 output application/java
 ---
 {
 	'client_id': p('papi.bladex.client_id'),
-	'client_secret': p('papi.bladex.client_secret'),
-	'x-correlation-id': correlationId
+	'client_secret': p('secure::papi.bladex.client_secret'),
+	'x-correlation-id': vars.outboundid
 }]]]></http:headers>
 					</http:request>
 		</foreach>
@@ -53,6 +47,6 @@ output application/java
 				<logger level="INFO" doc:name="No hay transferencias por procesar!" doc:id="b0c0d2e8-6850-418a-9320-1ca1ff5e2e10" message="No hay transferencias por procesar!"/>
 			</otherwise>
 		</choice>
-		<os:remove doc:name="Remove Tramas from OS" doc:id="283b6bf9-9daa-4f64-aac4-a51c388bf2e0" objectStore="Object_store" key="tramas"/>
+		<logger level="INFO" doc:name="Schedule process complete!" doc:id="6da745c7-0898-4592-b2e7-4752cfc351d4" message="Schedule process complete!"/>
 	</flow>
 </mule>

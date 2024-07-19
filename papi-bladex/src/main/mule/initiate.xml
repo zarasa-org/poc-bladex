@@ -12,8 +12,7 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 		<http:request-connection protocol="HTTPS" host="sapi-amazon-s3.us-e2.cloudhub.io" />
 	</http:request-config>
 	<flow name="Initiate-process" doc:id="558ce8fc-fadd-41ba-b30f-c73790a1b84b" >
-		<flow-ref doc:name="Generate transactions file per day" doc:id="3dcb6470-5a13-4330-8e7f-b640679fc0c6" name="Generate-transactions-file-per-day" />
-		<http:request method="POST" doc:name="SAPI Amazon MQ Consume" doc:id="c058c40f-dc33-4e35-8c32-38c784ff829b" url="#[&quot;https://ssapi-amazon-mq.us-e2.cloudhub.io/api/PublishMessage/&quot; ++ p('amazon.queueName')]" target="MQMessage">
+		<http:request method="POST" doc:name="SAPI Amazon MQ Publish" doc:id="c058c40f-dc33-4e35-8c32-38c784ff829b" url="#[&quot;https://sapi-amazon-mq.us-e2.cloudhub.io/api/PublishMessage/&quot; ++ p('amazon.queueName')]" target="MQMessage" responseTimeout="7000">
 			<http:body><![CDATA[#[%dw 2.0
 output application/json
 ---
@@ -23,49 +22,46 @@ output application/java
 ---
 {
 	'client_id': p('sapi.amazon.mq.client_id'),
-	'client_secret': p('sapi.amazon.mq.client_secret'),
+	'client_secret': p('secure::sapi.amazon.mq.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 		</http:request>
+		<flow-ref doc:name="Generate transactions file per day" doc:id="3dcb6470-5a13-4330-8e7f-b640679fc0c6" name="Generate-transactions-file-per-day" />
 		<flow-ref doc:name="Put Object to S3" doc:id="02229567-c733-4a51-af51-2c4cdfe5b250" name="put-object-to-s3" />
 		<flow-ref doc:name="Adjust Object Store" doc:id="5568c524-f0d0-4baf-8ad2-ec5e7fd30523" name="Adjust-object-store"/>
 		<flow-ref doc:name="Additional implementation" doc:id="7f361b8c-72cf-472c-8661-4e4451ac2473" name="Additional-implementation-initiate"/>
 		<error-handler >
 			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fd66280b-ed70-4541-9072-9d6a01954030" >
-				<ee:transform doc:name="Error Response" doc:id="3d88e303-538b-4ee6-9b21-b7dfbd7402aa" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
+				<http:request method="POST" doc:name="SAPI Amazon MQ Publish DLQ" doc:id="a12040f5-4ded-4735-a2b2-1cafc953d0a1" url='#["https://sapi-amazon-mq.us-e2.cloudhub.io/api/PublishMessage/ActiveMQ.DLQ"]' responseTimeout="7000" target="MQMessage">
+					<http:body><![CDATA[#[%dw 2.0
 output application/json
 ---
+payload]]]></http:body>
+					<http:headers><![CDATA[#[%dw 2.0
+output application/java
+---
 {
-  "status_code": "500",
-  "status": "Failed",
-  "message": error.description
-}]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
+	'client_id': p('sapi.amazon.mq.client_id'),
+	'client_secret': p('secure::sapi.amazon.mq.client_secret'),
+	'x-correlation-id': correlationId
+}]]]></http:headers>
+				</http:request>
 			</on-error-propagate>
 		</error-handler>
 	</flow>
 	<flow name="Adjust-object-store" doc:id="25ab96fd-dae6-43f8-8c19-17722ef05ae8" >
-		<os:retrieve doc:name="Retrieve Tramas" doc:id="ac781ebb-0581-4ddc-a5d2-1c184e7e287c" key="tramas" objectStore="Object_store" target="OSResponse">
-			<os:default-value ><![CDATA[#[{}]]]></os:default-value>
-		</os:retrieve>
-		<ee:transform doc:name="Add New Message" doc:id="f1d803b2-6514-46dc-989e-a1cdbd29b8b6" >
+		<ee:transform doc:name="Set Variable - outbound id" doc:id="024a0131-f3d7-46a0-835b-0e0511d19ce4" >
 			<ee:message >
 			</ee:message>
 			<ee:variables >
-				<ee:set-variable variableName="OSTramas" ><![CDATA[%dw 2.0
+				<ee:set-variable variableName="outboundid" ><![CDATA[%dw 2.0
 output application/java
 ---
-vars.OSResponse ++
-{
-	(correlationId): vars.financialgatewayid
-}]]></ee:set-variable>
+correlationId]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<os:store doc:name="Store Trama" doc:id="30abbea3-6def-401d-b0a5-2f8f7afe0adf" key="tramas" objectStore="Object_store">
-			<os:value ><![CDATA[#[vars.OSTramas]]]></os:value>
+		<os:store doc:name="Store Trama" doc:id="99f42633-19d5-4aaa-8361-2bf1816519fc" objectStore="Object_store" key="#[vars.outboundid]">
+			<os:value ><![CDATA[#[vars.financialgatewayid]]]></os:value>
 		</os:store>
 	</flow>
 	<flow name="Generate-transactions-file-per-day" doc:id="df814467-86d8-4581-b7bb-87cc4de9acd6">
@@ -77,7 +73,7 @@ output application/java
 var utc = "UTC" as TimeZone
 fun getFormattedDate()=(now() >> utc) as String {format: "ddMMuuuu"}
 ---
-'swift_' ++ getFormattedDate()]]></ee:set-variable>
+'swift_' ++ getFormattedDate() ++ '.txt']]></ee:set-variable>
             </ee:variables>
         </ee:transform>
 		<try doc:name="Try" doc:id="38da9abd-a49f-4f7a-ba9a-08303571e196">
@@ -89,7 +85,7 @@ fun getFormattedDate()=(now() >> utc) as String {format: "ddMMuuuu"}
 output application/java
 ---
 {
-    "bucketName": "bladex-test",
+    "bucketName": p('sapi.amazon.s3.bucketName'),
     "objectKey": vars.S3FileName,
     "contentType": "text/plain"
 }]]></ee:set-variable>
@@ -105,7 +101,7 @@ output application/java
 ---
 {
 	'client_id': p('sapi.amazon.s3.client_id'),
-	'client_secret': p('sapi.amazon.s3.client_secret'),
+	'client_secret': p('secure::sapi.amazon.s3.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 			</http:request>
@@ -172,7 +168,7 @@ output application/java
 var utc = "UTC" as TimeZone
 fun getFormattedDate()=(now() >> utc) as String {format: "ddMMuuuuHHmmss"}
 ---
-'swift_' ++ getFormattedDate()]]></ee:set-variable>
+'swift_' ++ getFormattedDate() ++ '.txt']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<ee:transform doc:name="S3 File" doc:id="66d89e2c-a42c-442a-8f9b-14467208dfa4">
@@ -212,7 +208,7 @@ valuesOf(
 output application/java
 ---
 {
-    "bucketName": "bladex-test",
+    "bucketName": p('sapi.amazon.s3.bucketName'),
     "objectKey": vars.S3FileName,
     "content": vars.S3File,
     "contentType": "text/plain"
@@ -229,7 +225,7 @@ output application/java
 ---
 {
 	'client_id': p('sapi.amazon.s3.client_id'),
-	'client_secret': p('sapi.amazon.s3.client_secret'),
+	'client_secret': p('secure::sapi.amazon.s3.client_secret'),
 	'x-correlation-id': correlationId
 }]]]></http:headers>
 		</http:request>
