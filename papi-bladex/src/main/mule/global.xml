@@ -35,7 +35,7 @@ http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/sc
 			</reconnection>
 		</os:connection>
 	</os:config>
-	<os:object-store name="Object_store" doc:name="Object store" doc:id="cbb930a1-57e4-4484-b156-d89d7e036c15" config-ref="ObjectStore_Config" />
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="cbb930a1-57e4-4484-b156-d89d7e036c15" config-ref="ObjectStore_Config" entryTtl="30" entryTtlUnit="DAYS" expirationInterval="30" expirationIntervalUnit="SECONDS"/>
 	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="c5d1fe42-9de3-4034-93c4-68e0d6ef8e82" flowRef="papi-bladex-main" />
     <secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="12f50d05-823e-43a1-9329-9e87c1b8ab2e" file="${env}-secure-properties.yaml" key="${secure.key}" >
 		<secure-properties:encrypt algorithm="Blowfish" />
